@@ -1,0 +1,7 @@
+flask==2.2.3
+openai==0.27.2
+python-dotenv==0.21.1
+gunicorn==20.1.0
+speechrecognition==3.9.0
+soundfile==0.12.1
+pydub==0.25.1
