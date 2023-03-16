@@ -1,4 +1,5 @@
 # For development use (simple logging, etc):
-python app.py
+pip3 install -r requirements.txt
+python3 app.py
 # For production use: 
 # gunicorn app:app -w 1 --log-file -

@@ -2,9 +2,7 @@
 
 <img src="logo.png" height=300 width=300>
 
-## TL;DR
-
-This program is a webhook implemented in python and flask. It receives incoming messages from WhatsApp, processes and responds with the help of OpenAI API. The messages can be either text or audio, and the response is generated with OpenAI's GPT-3.5 model. The critical functions of the program include handling incoming messages of different types, converting audio files to text and sending responses back to the user.
+> How DALL-E 2 imagines the project
 
 ## Getting-Stared
 To create your own WhatsApp chatbot you all you need to do is:
@@ -13,7 +11,14 @@ To create your own WhatsApp chatbot you all you need to do is:
 3. Create a [Whatsapp Business app](https://developers.facebook.com/apps) and generate a Token
 4. [Remix the app on Glitch](https://glitch.com/~whatsapp-openai-webhook-python) and set environmental variables
 5. Link your glitch app as [webhook](https://developers.facebook.com/docs/whatsapp/cloud-api/guides/set-up-webhooks) to your WhatsApp app
-6. Last but not least: star [this project](https://github.com/gustavz/whatsapp_openai_webhook) on GitHub ❤️
+6. Last but not least: star [this project](https://github.com/gustavz/whatsbot) on GitHub ❤️
+
+
+## TL;DR
+
+> How ChatGPT describes the project
+
+This program is a webhook implemented in python and flask. It receives incoming messages from WhatsApp, processes and responds with the help of OpenAI API. The messages can be either text or audio, and the response is generated with OpenAI's GPT-3.5 model. The critical functions of the program include handling incoming messages of different types, converting audio files to text and sending responses back to the user.
 
 ## Learnables
 
@@ -138,15 +143,20 @@ It uses the `openai.ChatCompletion.create` method to generate the response.
 
 ```python
 def make_openai_request(message, from_number):
-    message_log = update_message_log_dict(message, from_number, "user")
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=message_log,
-        temperature=0.7,
-    )
-    response_message = response.choices[0].message.content
-    print(f"openai response: {response_message}")
-    update_message_log_dict(response_message, from_number, "assistant")
+    try:
+        message_log = update_message_log(message, from_number, "user")
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=message_log,
+            temperature=0.7,
+        )
+        response_message = response.choices[0].message.content
+        print(f"openai response: {response_message}")
+        update_message_log(response_message, from_number, "assistant")
+    except Exception as e:
+        print(f"openai error: {e}")
+        response_message = "Sorry, the OpenAI API is currently overloaded or offline. Please try again later."
+        remove_last_message_from_log(from_number)
     return response_message
 ```
 

@@ -10,6 +10,7 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
+
 # OpenAi API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -21,6 +22,11 @@ verify_token = os.environ.get("VERIFY_TOKEN")
 
 # Message log dictionary to enable conversation over multiple messages
 message_log_dict = {}
+
+
+# language for speech to text recoginition
+# TODO: detect this automatically based on the user's language
+LANGUGAGE = "en-US"
 
 
 # get the media url from the media id
@@ -59,7 +65,7 @@ def convert_audio_bytes(audio_bytes):
 # run speech recognition on the audio data
 def recognize_audio(audio_bytes):
     recognizer = sr.Recognizer()
-    audio_text = recognizer.recognize_google(audio_bytes)
+    audio_text = recognizer.recognize_google(audio_bytes, language=LANGUGAGE)
     return audio_text
 
 
@@ -70,8 +76,8 @@ def handle_audio_message(audio_id):
     audio_data = convert_audio_bytes(audio_bytes)
     audio_text = recognize_audio(audio_data)
     message = (
-      "Please summarize the following message in its original language "
-      f"as a list of bullet-points: {audio_text}"
+        "Please summarize the following message in its original language "
+        f"as a list of bullet-points: {audio_text}"
     )
     return message
 
@@ -98,8 +104,11 @@ def send_whatsapp_message(body, message):
 
 
 # create a message log for each phone number and return the current message log
-def update_message_log_dict(message, phone_number, role):
-    initial_log = {"role": "system", "content": "You are a helpful assistant."}
+def update_message_log(message, phone_number, role):
+    initial_log = {
+        "role": "system",
+        "content": "You are a helpful assistant named WhatsBot.",
+    }
     if phone_number not in message_log_dict:
         message_log_dict[phone_number] = [initial_log]
     message_log = {"role": role, "content": message}
@@ -107,17 +116,27 @@ def update_message_log_dict(message, phone_number, role):
     return message_log_dict[phone_number]
 
 
+# remove last message from log if OpenAI request fails
+def remove_last_message_from_log(phone_number):
+    message_log_dict[phone_number].pop()
+
+
 # make request to OpenAI
 def make_openai_request(message, from_number):
-    message_log = update_message_log_dict(message, from_number, "user")
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=message_log,
-        temperature=0.7,
-    )
-    response_message = response.choices[0].message.content
-    print(f"openai response: {response_message}")
-    update_message_log_dict(response_message, from_number, "assistant")
+    try:
+        message_log = update_message_log(message, from_number, "user")
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=message_log,
+            temperature=0.7,
+        )
+        response_message = response.choices[0].message.content
+        print(f"openai response: {response_message}")
+        update_message_log(response_message, from_number, "assistant")
+    except Exception as e:
+        print(f"openai error: {e}")
+        response_message = "Sorry, the OpenAI API is currently overloaded or offline. Please try again later."
+        remove_last_message_from_log(from_number)
     return response_message
 
 
@@ -202,6 +221,7 @@ def webhook():
         return verify(request)
     elif request.method == "POST":
         return handle_message(request)
+
 
 # Route to reset message log
 @app.route("/reset", methods=["GET"])
