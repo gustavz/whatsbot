@@ -1,6 +1,10 @@
 # WhatsBot
 
-<img src="logo.png" height=300 width=300>
+<div align="left">
+      <a href="https://www.youtube.com/shorts/zAwtykOesns">
+         <img src="logo.png" height=300 width=300>
+      </a>
+</div>
 
 > How DALL-E 2 imagines the project
 
