@@ -8,7 +8,7 @@
 
 > How DALL-E 2 imagines the project
 
-## Getting-Stared
+## Getting-Started
 To create your own WhatsApp chatbot you all you need to do is:
 1. Creata an [OpenAI API](https://openai.com/product) account and generate an API key
 2. Create a [Meta developer](https://developers.facebook.com/) account
